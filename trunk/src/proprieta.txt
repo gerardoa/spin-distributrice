@@ -1,2 +1,2 @@
 - La bevanda viene erogata non appena il credito necessario è stato raggiunto
-- La bevanda erogata è quella per cui si è pagato
+- La bevanda erogata è quella per cui si è pagato (credito - prezzo)
