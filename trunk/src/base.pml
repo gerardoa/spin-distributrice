@@ -2,10 +2,11 @@
 mtype = { caffe, cappuccino, tea, nessuna, credito_agg }
 
 local mtype bevanda_erogata = nessuna;
-local int credito = 0;
+local short credito = 0;
 short prezzo = 0;
 mtype scelta = nessuna;
 bool mutex_tastierino = true;
+bool flag_eroga = false;
 
 chan monete = [0] of { byte }
 chan bevanda = [0] of { mtype }
@@ -42,7 +43,9 @@ proctype Utente()
 	:: bevanda!cappuccino
 	:: bevanda!tea
 
-	:: bicchiere?bevanda_erogata -> assert(bevanda_erogata != nessuna)	
+	:: bicchiere?bevanda_erogata -> 
+		assert(bevanda_erogata != nessuna);
+		bevanda_erogata = nessuna
 	od
 }
 
@@ -55,16 +58,23 @@ proctype Gettoniera()
 	:: monete?m -> 
 		/* assert(m == 5 || m == 10 || m == 20 || m == 50 || m == 100 || m == 200); */
 		credito = credito + m;
+		mutex_tastierino = false;
 		goto Controllo	
-	:: verifica?true -> 
+	:: atomic {verifica?true -> mutex_tastierino = false }
 		goto Controllo
 	od;
 
- Controllo: if 
+ Controllo:
+	if 
 	:: (prezzo > 0 && credito >= prezzo) ->
 		credito = credito - prezzo;
+		prezzo = 0;
 		eroga!true
-	:: else -> skip
+	:: else -> 
+		if
+		:: (flag_eroga == false) -> mutex_tastierino = true;
+		:: else -> skip
+		fi
 	fi;
 	goto G;
 }
@@ -101,17 +111,18 @@ proctype Erogatore()
 	mtype tmp;
 
 	do		
-	:: eroga?true -> 
-		prezzo = 0;
+	:: atomic { eroga?true -> flag_eroga = true }
 		tmp = scelta;
 		scelta = nessuna;
-		bicchiere!tmp
+		flag_eroga = false;
+		bicchiere!tmp;
+			mutex_tastierino = true
 	od
 }
 
 /* ltl p2 { <>(credito >= 35 && scelta == caffe) } */
 
-ltl p1 { [](credito >= 35 && (scelta == nessuna U scelta == caffe) ->  bevanda_erogata == nessuna U bevanda_erogata == caffe)}
+ltl p1 { []((credito >= 35 && (scelta == nessuna U scelta == caffe)) ->  (bevanda_erogata == nessuna U bevanda_erogata == caffe))}
 
 /*ltl t1 { [](Gettoniera:p >= 0) }*/
 /* ltl t1 { [](scelta == caffe  ->  (bevanda_erogata == nessuna) U (bevanda_erogata == caffe)) } */
