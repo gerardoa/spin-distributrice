@@ -114,9 +114,9 @@ proctype Erogatore()
 	:: atomic { eroga?true -> flag_eroga = true }
 		tmp = scelta;
 		scelta = nessuna;
-		flag_eroga = false;
 		bicchiere!tmp;
-			mutex_tastierino = true
+		flag_eroga = false;
+		mutex_tastierino = true
 	od
 }
 
