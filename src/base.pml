@@ -43,9 +43,9 @@ proctype Utente()
 	:: bevanda!cappuccino
 	:: bevanda!tea
 
-	:: bicchiere?bevanda_erogata -> 
+	:: atomic { bicchiere?bevanda_erogata ->
 		assert(bevanda_erogata != nessuna);
-		bevanda_erogata = nessuna
+		bevanda_erogata = nessuna }
 	od
 }
 
@@ -115,17 +115,24 @@ proctype Erogatore()
 		tmp = scelta;
 		scelta = nessuna;
 		bicchiere!tmp;
-		flag_eroga = false;
-		mutex_tastierino = true
+		mutex_tastierino = true;
+		flag_eroga = false
 	od
 }
 
 /* ltl p2 { <>(credito >= 35 && scelta == caffe) } */
 
 ltl p1 { []((credito >= 35 && (scelta == nessuna U scelta == caffe)) ->  (bevanda_erogata == nessuna U bevanda_erogata == caffe))}
+ltl p2 { []((credito == 35 && (scelta == nessuna U scelta == tea)) ->  (bevanda_erogata == nessuna U bevanda_erogata == tea))}
 
 /*ltl t1 { [](Gettoniera:p >= 0) }*/
 /* ltl t1 { [](scelta == caffe  ->  (bevanda_erogata == nessuna) U (bevanda_erogata == caffe)) } */
+
+
+
+
+
+
 
 
 
