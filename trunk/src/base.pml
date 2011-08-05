@@ -29,7 +29,7 @@ init
 
 proctype Utente()
 {
-	/* mtype bevanda_erogata = nessuna;	*/
+	mtype b_e;
 
 	do
 	:: monete!5
@@ -43,7 +43,8 @@ proctype Utente()
 	:: bevanda!cappuccino
 	:: bevanda!tea
 
-	:: atomic { bicchiere?bevanda_erogata ->
+	:: atomic { bicchiere?b_e ->
+		bevanda_erogata = b_e;
 		assert(bevanda_erogata != nessuna);
 		bevanda_erogata = nessuna }
 	od
@@ -126,7 +127,7 @@ ltl p1 { []((credito >= 35 && (scelta == nessuna U scelta == caffe)) ->  (bevand
 ltl p2 { []((credito == 35 && (scelta == nessuna U scelta == tea)) ->  (bevanda_erogata == nessuna U bevanda_erogata == tea))}
 
 /*ltl t1 { [](Gettoniera:p >= 0) }*/
-/* ltl t1 { [](scelta == caffe  ->  (bevanda_erogata == nessuna) U (bevanda_erogata == caffe)) } */
+ltl t1 { []( bevanda_erogata == nessuna U bevanda_erogata == caffe ) } 
 
 
 

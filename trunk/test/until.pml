@@ -2,7 +2,10 @@ int i = 0;
 int p = 0;
 int k = 0;
 
-active proctype A()
+mtype = {nes, caf, tea}
+mtype bev = nes; 
+
+proctype A()
 {
 	i = 1;
 	i = 100;
@@ -18,25 +21,41 @@ active proctype A()
 	i = 0;
 	p = 3;
 	i = 4;
-	p = 10;
-}
-
-proctype B()
-{
 	if
-	:: (true) -> p++
+	:: (true) -> p = 10;
+	:: (true) -> p = 10;
 	fi;
+	i = 7;
 }
 
-ltl p1 { [](i == 4 -> ( i <= 4 U i == 5)) }
-ltl t1 { [](( i <= 4 U i == 5)) }
-ltl p2 { <>(i == 7) }
+active proctype B()
+{
+	bev = nes;
+	bev = nes; 
+	/* atomic { 
+		bev = tea;
+		bev = nes;
+	 } */
+	do
+	:: true -> p++
+	od
+	/* bev = caf; */
+}
 
-ltl p3 { []( (k == 1 && (i <= 3 U i == 7)) -> (p <= 8 U p == 10)) }
+proctype C()
+{
+	do
+	:: true -> p++
+	od
+}
 
-ltl p4 { []( k == 1 && (i <= 3 U i == 7) -> p == 4) }
 
-ltl p5 { []( k == 1 -> (i <= 3 U i == 7)) }
+ltl p1 { []( (k == 1 && (i <= 3 U i == 7)) -> (p <= 8 U p == 10)) }
+
+ltl t1 { [](bev == nes U bev == caf) }
+
+
+
 
 
 
