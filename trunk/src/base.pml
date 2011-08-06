@@ -2,8 +2,8 @@
 mtype = { caffe, cappuccino, tea, nessuna, credito_agg }
 
 local mtype bevanda_erogata = nessuna;
-local short credito = 0;
-short prezzo = 0;
+local byte credito = 0;
+byte prezzo = 0;
 mtype scelta = nessuna;
 bool mutex_tastierino = true;
 bool flag_eroga = false;
@@ -29,7 +29,6 @@ init
 
 proctype Utente()
 {
-	mtype b_e;
 
 	do
 	:: monete!5
@@ -43,10 +42,9 @@ proctype Utente()
 	:: bevanda!cappuccino
 	:: bevanda!tea
 
-	:: atomic { bicchiere?b_e ->
-		bevanda_erogata = b_e;
+	:: bicchiere?bevanda_erogata ->
 		assert(bevanda_erogata != nessuna);
-		bevanda_erogata = nessuna }
+		bevanda_erogata = nessuna
 	od
 }
 
@@ -56,10 +54,13 @@ proctype Gettoniera()
 	
 /* diminuzione credito all'erogazione e alla richiesta di resto */
  G:	do
-	:: monete?m -> 
+	:: atomic { monete?m -> mutex_tastierino = false }
 		/* assert(m == 5 || m == 10 || m == 20 || m == 50 || m == 100 || m == 200); */
+		if
+		:: ((credito + m) > 255) -> goto G
+		:: else
+		fi;
 		credito = credito + m;
-		mutex_tastierino = false;
 		goto Controllo	
 	:: atomic {verifica?true -> mutex_tastierino = false }
 		goto Controllo
@@ -114,8 +115,8 @@ proctype Erogatore()
 	do		
 	:: atomic { eroga?true -> flag_eroga = true }
 		tmp = scelta;
-		scelta = nessuna;
 		bicchiere!tmp;
+	   	scelta = nessuna;
 		mutex_tastierino = true;
 		flag_eroga = false
 	od

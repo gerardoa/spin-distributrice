@@ -1,4 +1,4 @@
-int i = 0;
+byte i = 0;
 int p = 0;
 int k = 0;
 
@@ -31,14 +31,12 @@ proctype A()
 active proctype B()
 {
 	bev = nes;
-	bev = nes; 
-	/* atomic { 
+l1:	bev = nes; 
+	atomic { 
 		bev = tea;
 		bev = nes;
-	 } */
-	do
-	:: true -> p++
-	od
+	 }
+	 do :: true -> i++ od
 	/* bev = caf; */
 }
 
@@ -53,18 +51,6 @@ proctype C()
 ltl p1 { []( (k == 1 && (i <= 3 U i == 7)) -> (p <= 8 U p == 10)) }
 
 ltl t1 { [](bev == nes U bev == caf) }
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
