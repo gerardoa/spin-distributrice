@@ -38,7 +38,8 @@ proctype Utente()
 	:: monete!100
 	:: monete!200
 	
-	:: bevanda!caffe
+	:: bevanda!caffe ->
+		sc: skip 
 	:: bevanda!cappuccino
 	:: bevanda!tea
 
@@ -57,10 +58,10 @@ proctype Gettoniera()
 	:: atomic { monete?m -> mutex_tastierino = false }
 		/* assert(m == 5 || m == 10 || m == 20 || m == 50 || m == 100 || m == 200); */
 		if
-		:: ((credito + m) > 255) -> goto G
+		:: ((credito + m) < 256) -> 
+			credito = credito + m
 		:: else
 		fi;
-		credito = credito + m;
 		goto Controllo	
 	:: atomic {verifica?true -> mutex_tastierino = false }
 		goto Controllo
@@ -75,7 +76,7 @@ proctype Gettoniera()
 	:: else -> 
 		if
 		:: (flag_eroga == false) -> mutex_tastierino = true;
-		:: else -> skip
+		:: else
 		fi
 	fi;
 	goto G;
@@ -85,7 +86,7 @@ proctype Tastierino()
 {
 	do
 	:: bevanda?caffe -> 
-		atomic {
+		atomic { 
 		 (mutex_tastierino == true);
 		 prezzo = 35;
 		 scelta = caffe;
@@ -129,6 +130,7 @@ ltl p2 { []((credito == 35 && (scelta == nessuna U scelta == tea)) ->  (bevanda_
 
 /*ltl t1 { [](Gettoniera:p >= 0) }*/
 ltl t1 { []( bevanda_erogata == nessuna U bevanda_erogata == caffe ) } 
+ltl t2 { []((credito >= 35 && Utente@sc) ->  (bevanda_erogata == nessuna U bevanda_erogata == caffe))}
 
 
 
