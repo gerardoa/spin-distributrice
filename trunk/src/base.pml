@@ -7,6 +7,7 @@ byte prezzo = 0;
 mtype scelta = nessuna;
 bool mutex_tastierino = true;
 bool flag_eroga = false;
+bool flag_scelta = false;
 
 chan monete = [0] of { byte }
 chan bevanda = [0] of { mtype }
@@ -55,8 +56,9 @@ proctype Gettoniera()
 	
 /* diminuzione credito all'erogazione e alla richiesta di resto */
  G:	do
-	:: atomic { monete?m -> mutex_tastierino = false }
+	:: atomic { monete?m ->  atomic { (flag_scelta == false); mutex_tastierino = false; } }
 		/* assert(m == 5 || m == 10 || m == 20 || m == 50 || m == 100 || m == 200); */
+		/*(flag_scelta == false);*/
 		if
 		:: ((credito + m) < 256) -> 
 			credito = credito + m
@@ -85,11 +87,12 @@ proctype Gettoniera()
 proctype Tastierino()
 {
 	do
-	:: bevanda?caffe -> 
+	::atomic { bevanda?caffe -> flag_scelta = true; }
 		atomic { 
 		 (mutex_tastierino == true);
 		 prezzo = 35;
-		 scelta = caffe;
+		 scelta = caffe; 
+		 flag_scelta = false;
 		}
 		verifica!true
 	:: bevanda?cappuccino ->
@@ -118,8 +121,8 @@ proctype Erogatore()
 		tmp = scelta;
 		bicchiere!tmp;
 	   	scelta = nessuna;
-		mutex_tastierino = true;
-		flag_eroga = false
+		flag_eroga = false;
+		mutex_tastierino = true
 	od
 }
 
