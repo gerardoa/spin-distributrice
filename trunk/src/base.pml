@@ -14,7 +14,7 @@ chan bevanda = [0] of { mtype }
 /* chan prezzo = [0] of { short } */
 chan eroga = [0] of { bool }
 chan bicchiere = [0] of { mtype }
-chan ok[2] = [0] of { bool }
+chan ok = [0] of { bool }
 chan verifica = [0] of { bool }
 
 
@@ -40,9 +40,10 @@ proctype Utente()
 	:: monete!200
 	
 	:: bevanda!caffe ->
-		sc: skip 
-	:: bevanda!cappuccino
-	:: bevanda!tea
+		sc: skip;
+		ok?true;
+	:: bevanda!cappuccino -> ok?true;
+	:: bevanda!tea -> ok?true;
 
 	:: bicchiere?bevanda_erogata ->
 		assert(bevanda_erogata != nessuna);
@@ -56,9 +57,9 @@ proctype Gettoniera()
 	
 /* diminuzione credito all'erogazione e alla richiesta di resto */
  G:	do
-	:: atomic { monete?m ->  atomic { (flag_scelta == false); mutex_tastierino = false; } }
+	:: atomic { monete?m ->  (flag_scelta == false); mutex_tastierino = false; }
 		/* assert(m == 5 || m == 10 || m == 20 || m == 50 || m == 100 || m == 200); */
-		/*(flag_scelta == false);*/
+		
 		if
 		:: ((credito + m) < 256) -> 
 			credito = credito + m
@@ -94,20 +95,25 @@ proctype Tastierino()
 		 scelta = caffe; 
 		 flag_scelta = false;
 		}
+		ok!true;
 		verifica!true
-	:: bevanda?cappuccino ->
+	::atomic { bevanda?cappuccino -> flag_scelta = true; }
 		atomic {
 		 (mutex_tastierino == true);
 		 prezzo = 50;
 		 scelta = cappuccino;
+		 flag_scelta = false;
 		}
+		ok!true;
 		verifica!true
-	:: bevanda?tea ->
+	::atomic { bevanda?tea -> flag_scelta = true; }
 		atomic {
 		 (mutex_tastierino == true);
 		 prezzo = 40;
 		 scelta = tea;
+		 flag_scelta = false;
 		}
+		ok!true;
 		verifica!true
 	od
 }
@@ -121,8 +127,10 @@ proctype Erogatore()
 		tmp = scelta;
 		bicchiere!tmp;
 	   	scelta = nessuna;
-		flag_eroga = false;
-		mutex_tastierino = true
+		atomic { 
+		 mutex_tastierino = true;
+		 flag_eroga = false 
+		}		
 	od
 }
 
@@ -133,7 +141,8 @@ ltl p2 { []((credito == 35 && (scelta == nessuna U scelta == tea)) ->  (bevanda_
 
 /*ltl t1 { [](Gettoniera:p >= 0) }*/
 ltl t1 { []( bevanda_erogata == nessuna U bevanda_erogata == caffe ) } 
-ltl t2 { []((credito >= 35 && Utente@sc) ->  (bevanda_erogata == nessuna U bevanda_erogata == caffe))}
+ltl t2 { []((credito >= 35 && scelta == caffe ) ->  (bevanda_erogata == nessuna U bevanda_erogata == caffe))}
+
 
 
 
