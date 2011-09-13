@@ -1,23 +1,19 @@
 
-mtype = { caffe, cappuccino, tea, nessuna, credito_agg }
+mtype = { caffe, cappuccino, tea, nessuna }
 
-local mtype bevanda_erogata = nessuna;
-local byte credito = 0;
+byte credito = 0;
 byte prezzo = 0;
+mtype bevanda_erogata = nessuna;
 mtype scelta = nessuna;
-bool mutex_tastierino = true;
-bool flag_eroga = false;
-bool flag_scelta = false;
 bool mutex = true;
 
 chan monete = [0] of { byte }
 chan bevanda = [0] of { mtype }
-/* chan prezzo = [0] of { short } */
 chan eroga = [0] of { bool }
 chan bicchiere = [0] of { mtype }
-chan ok = [0] of { bool }
-chan verifica = [0] of { bool }
 chan controllo = [0] of { bool }
+
+chan list = [3] of { byte };
 
 
 init 
@@ -43,7 +39,7 @@ proctype Utente()
 	:: monete!200
 	
 	:: bevanda!caffe ->
-		sc: skip;
+	   c2: skip;
 	:: bevanda!cappuccino
 	:: bevanda!tea
 
@@ -55,13 +51,21 @@ proctype Utente()
 proctype Gettoniera()
 {
 	byte m;
+	byte id = 1;
+	byte k;
 	
 /* diminuzione credito all'erogazione e alla richiesta di resto */
  G:	do
-	:: monete?m ->			
-		atomic { mutex == true -> mutex = false }
+	:: atomic { monete?m ->			
+		list!id; } 
+	  	if
+		     :: (id == 1) -> list?<1>
+		     :: (id == 0) -> list?<0>
+		fi;
+
+		id = 1 - id; 
 		/* assert(m == 5 || m == 10 || m == 20 || m == 50 || m == 100 || m == 200); */
-		
+	 pmutex:  skip;
 		if
 		:: ((credito + m) < 256) -> 
 			credito = credito + m
@@ -76,34 +80,47 @@ proctype Gettoniera()
 
 proctype Controllo()
 {
-              do
+                do
 	:: controllo?true -> 
 	  if 
 	  :: (prezzo > 0 && credito >= prezzo) ->
 		credito = credito - prezzo;
 		prezzo = 0;
 		eroga!true
-  	  :: else -> mutex = true;
+  	  :: else -> list?_;
 	  fi;
 	od
 }
 
 proctype Tastierino()
 {
-	do
-	::bevanda?caffe -> atomic { mutex == true;  mutex = false }
-		 prezzo = 35;
-		 scelta = caffe;
-		 controllo!true
-	::bevanda?cappuccino -> atomic { mutex == true;  mutex = false }
-		 prezzo = 50;
-		 scelta = cappuccino;
-		controllo!true
-	::bevanda?tea -> atomic { mutex == true;  mutex = false }
-		 prezzo = 40;
-		 scelta = tea;
-		controllo!true
-	od
+	byte id = 3;
+	byte b;
+
+  T:	do
+	:: atomic { bevanda?b -> list!id; }
+	    start:	 if
+		 :: (id == 3) -> list?<3>
+		 :: (id == 4) -> list?<4>
+		fi;
+		if
+		:: (id == 3) -> id = 4
+		:: (id == 4) -> id = 3
+		fi;
+		if
+		:: (b == caffe) ->
+			prezzo = 35;
+			scelta = caffe;
+		:: (b == cappuccino) ->
+			prezzo = 50;
+			scelta = cappuccino;
+		:: (b == tea) ->
+			prezzo = 40;
+			scelta = tea;
+		fi;
+		controllo!true;
+	   end: skip;
+	od;
 }
 
 proctype Erogatore()
@@ -117,19 +134,23 @@ proctype Erogatore()
 		assert(bevanda_erogata != nessuna);
 		scelta = nessuna;
 		bevanda_erogata = nessuna;		   		
-		mutex = true;	
+		list?_;	
 	od
 }
 
-/* ltl p2 { <>(credito >= 35 && scelta == caffe) } */
 
-ltl p1 { []((credito >= 35 && (scelta == nessuna U scelta == caffe)) ->  (bevanda_erogata == nessuna U bevanda_erogata == caffe))}
-ltl p2 { []((credito == 35 && (scelta == nessuna U scelta == tea)) ->  (bevanda_erogata == nessuna U bevanda_erogata == tea))}
+/*
+ltl pmutex { [](!(Gettoniera@pmutex && Tastierino@mutexp)) }
+ltl pmutexe { <>((Gettoniera@pmutex && Tastierino@mutexp)) }
+*/
+ltl c1 { []((credito >= 35 && scelta == caffe ) ->  (bevanda_erogata == nessuna U bevanda_erogata == caffe))}
+ltl cp1 { []((credito >= 50 && scelta == cappuccino ) ->  (bevanda_erogata == nessuna U bevanda_erogata == cappuccino))}
+ltl t1 { []((credito >= 40 && scelta == tea ) ->  (bevanda_erogata == nessuna U bevanda_erogata == tea))}
+ltl c1e { []((credito < 35 && scelta == caffe ) ->  (bevanda_erogata == nessuna U bevanda_erogata == caffe))}
 
-/*ltl t1 { [](Gettoniera:p >= 0) }*/
-ltl t1 { []( bevanda_erogata == nessuna U bevanda_erogata == caffe ) } 
-ltl t2 { []((credito >= 35 && scelta == caffe ) ->  (bevanda_erogata == nessuna U bevanda_erogata == caffe))}
-ltl t3 { []((credito == 30 && scelta == caffe ) ->  (bevanda_erogata == nessuna U bevanda_erogata == caffe))}
+ltl c2 { []((credito >= 35 && Utente@c2 ) ->  (bevanda_erogata == nessuna U bevanda_erogata == caffe))} 
+
+ltl test1 { [](Tastierino@start -> (<>Tastierino@end)) } 
 
 
 
