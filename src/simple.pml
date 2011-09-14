@@ -63,9 +63,8 @@ proctype Gettoniera()
 		     :: (id == 0) -> list?<0>
 		fi;
 
-		id = 1 - id; 
+	  pmutex: id = 1 - id; 
 		/* assert(m == 5 || m == 10 || m == 20 || m == 50 || m == 100 || m == 200); */
-	 pmutex:  skip;
 		if
 		:: ((credito + m) < 256) -> 
 			credito = credito + m
@@ -85,7 +84,7 @@ proctype Controllo()
 	  if 
 	  :: (prezzo > 0 && credito >= prezzo) ->
 		credito = credito - prezzo;
-		prezzo = 0;
+	    preset:	prezzo = 0;
 		eroga!true
   	  :: else -> list?_;
 	  fi;
@@ -103,7 +102,7 @@ proctype Tastierino()
 		 :: (id == 3) -> list?<3>
 		 :: (id == 4) -> list?<4>
 		fi;
-		if
+	  pmutex:	if
 		:: (id == 3) -> id = 4
 		:: (id == 4) -> id = 3
 		fi;
@@ -118,8 +117,8 @@ proctype Tastierino()
 			prezzo = 40;
 			scelta = tea;
 		fi;
-		controllo!true;
-	   end: skip;
+	lcontrollo:	controllo!true;
+	   end: 	skip;
 	od;
 }
 
@@ -139,10 +138,8 @@ proctype Erogatore()
 }
 
 
-/*
-ltl pmutex { [](!(Gettoniera@pmutex && Tastierino@mutexp)) }
-ltl pmutexe { <>((Gettoniera@pmutex && Tastierino@mutexp)) }
-*/
+ltl pmutex { [](!(Gettoniera@pmutex && Tastierino@pmutex)) }
+ltl pmutexe { <>((Gettoniera@pmutex && Tastierino@pmutex)) }
 ltl c1 { []((credito >= 35 && scelta == caffe ) ->  (bevanda_erogata == nessuna U bevanda_erogata == caffe))}
 ltl cp1 { []((credito >= 50 && scelta == cappuccino ) ->  (bevanda_erogata == nessuna U bevanda_erogata == cappuccino))}
 ltl t1 { []((credito >= 40 && scelta == tea ) ->  (bevanda_erogata == nessuna U bevanda_erogata == tea))}
@@ -151,6 +148,14 @@ ltl c1e { []((credito < 35 && scelta == caffe ) ->  (bevanda_erogata == nessuna 
 ltl c2 { []((credito >= 35 && Utente@c2 ) ->  (bevanda_erogata == nessuna U bevanda_erogata == caffe))} 
 
 ltl test1 { [](Tastierino@start -> (<>Tastierino@end)) } 
+
+ltl c3 { []( (credito == 100 && Tastierino@lcontrollo && scelta == caffe ) -> (credito == 100 U credito == 65) ) }
+
+ltl c4 { []((Controllo@preset && prezzo == 35) -> (bevanda_erogata == nessuna U bevanda_erogata == caffe)) }
+ltl cp4 { []((Controllo@preset && prezzo == 50) -> (bevanda_erogata == nessuna U bevanda_erogata == cappuccino)) }	
+
+
+
 
 
 
