@@ -5,7 +5,6 @@ byte credito = 0;
 byte prezzo = 0;
 mtype bevanda_erogata = nessuna;
 mtype scelta = nessuna;
-bool mutex = true;
 
 chan monete = [0] of { byte }
 chan bevanda = [0] of { mtype }
@@ -13,7 +12,7 @@ chan eroga = [0] of { bool }
 chan bicchiere = [0] of { mtype }
 chan controllo = [0] of { bool }
 
-chan list = [3] of { byte };
+chan list = [4] of { byte };
 
 
 init 
@@ -51,7 +50,6 @@ proctype Gettoniera()
 {
 	byte m;
 	byte id = 1;
-	byte k;
 	
 /* diminuzione credito all'erogazione e alla richiesta di resto */
  G:	do
@@ -80,22 +78,22 @@ proctype Gettoniera()
 
 proctype Controllo()
 {
-                do
+	do
 	:: controllo?true -> 
-	  if 
-	  :: (prezzo > 0 && credito >= prezzo) ->
-		credito = credito - prezzo;
-	    preset:	prezzo = 0;
-		eroga!true
-  	  :: else -> list?_;
-	  fi;
+	     lctrl:	if 
+	  	:: (prezzo > 0 && credito >= prezzo) ->
+			credito = credito - prezzo;
+	                   preset:  prezzo = 0;
+			eroga!true
+  	  	:: else -> list?_;
+	  	fi;
 	od
 }
 
 proctype Tastierino()
 {
 	byte id = 3;
-	byte b;
+	mtype b;
 
   T:	do
 	:: atomic { bevanda?b -> list!id; }
@@ -133,7 +131,7 @@ proctype Erogatore()
 	do		
 	:: eroga?true ->
 		tmp = scelta;
-		bicchiere!tmp;
+	   	bicchiere!tmp;
 		assert(bevanda_erogata != nessuna);
 		scelta = nessuna;
 		bevanda_erogata = nessuna;		   		
@@ -151,13 +149,15 @@ ltl c1e { []((credito < 35 && scelta == caffe ) ->  (bevanda_erogata == nessuna 
 
 /* ltl c2 { []((credito >= 35 && Utente@c2 ) ->  (bevanda_erogata == nessuna U bevanda_erogata == caffe))} */
 
-ltl test1 { [](Tastierino@start -> (<>Tastierino@end)) } 
+ltl test1 { [] (Tastierino@start -> <> Tastierino@end) } 
 
 ltl c3 { []( (credito == 100 && Tastierino@lcontrollo && scelta == caffe ) -> (credito == 100 U credito == 65) ) }
 
 ltl c4 { []((Controllo@preset && prezzo == 35) -> (bevanda_erogata == nessuna U bevanda_erogata == caffe)) }
 ltl cp4 { []((Controllo@preset && prezzo == 50) -> (bevanda_erogata == nessuna U bevanda_erogata == cappuccino)) }	
-ltl next { []((Gettoniera@check1 && Tastierino@check1 && len(list) == 2) -> X(Gettoniera@pmutex || Tastierino@pmutex)) }
+ltl next { [](( (Gettoniera@check1 +  Gettoniera@check2 + Tastierino@check1 + Tastierino@check2 == 2) && len(list) == 2) -> X(Gettoniera@pmutex || Tastierino@pmutex)) }
+ltl p1 { []<> (Controllo@lctrl) }
+ltl p2 { [] (len(list) < 4) }
 
 
 
