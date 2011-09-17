@@ -38,8 +38,7 @@ proctype Utente()
 	:: monete!100
 	:: monete!200
 	
-	:: bevanda!caffe ->
-	   c2: skip;
+	:: bevanda!caffe
 	:: bevanda!cappuccino
 	:: bevanda!tea
 
@@ -58,9 +57,11 @@ proctype Gettoniera()
  G:	do
 	:: atomic { monete?m ->			
 		list!id; } 
-	  	if
-		     :: (id == 1) -> list?<1>
-		     :: (id == 0) -> list?<0>
+	    start:	if
+		     :: (id == 1) -> 
+	    check1:		list?<1>
+		     :: (id == 0) -> 
+	    check2:		list?<0>
 		fi;
 
 	  pmutex: id = 1 - id; 
@@ -99,8 +100,11 @@ proctype Tastierino()
   T:	do
 	:: atomic { bevanda?b -> list!id; }
 	    start:	 if
-		 :: (id == 3) -> list?<3>
-		 :: (id == 4) -> list?<4>
+		 :: (id == 3) -> 
+	check1:		list?<3>
+		 :: (id == 4) -> 
+	check2:		list?<4>
+
 		fi;
 	  pmutex:	if
 		:: (id == 3) -> id = 4
@@ -145,7 +149,7 @@ ltl cp1 { []((credito >= 50 && scelta == cappuccino ) ->  (bevanda_erogata == ne
 ltl t1 { []((credito >= 40 && scelta == tea ) ->  (bevanda_erogata == nessuna U bevanda_erogata == tea))}
 ltl c1e { []((credito < 35 && scelta == caffe ) ->  (bevanda_erogata == nessuna U bevanda_erogata == caffe))}
 
-ltl c2 { []((credito >= 35 && Utente@c2 ) ->  (bevanda_erogata == nessuna U bevanda_erogata == caffe))} 
+/* ltl c2 { []((credito >= 35 && Utente@c2 ) ->  (bevanda_erogata == nessuna U bevanda_erogata == caffe))} */
 
 ltl test1 { [](Tastierino@start -> (<>Tastierino@end)) } 
 
@@ -153,6 +157,7 @@ ltl c3 { []( (credito == 100 && Tastierino@lcontrollo && scelta == caffe ) -> (c
 
 ltl c4 { []((Controllo@preset && prezzo == 35) -> (bevanda_erogata == nessuna U bevanda_erogata == caffe)) }
 ltl cp4 { []((Controllo@preset && prezzo == 50) -> (bevanda_erogata == nessuna U bevanda_erogata == cappuccino)) }	
+ltl next { []((Gettoniera@check1 && Tastierino@check1 && len(list) == 2) -> X(Gettoniera@pmutex || Tastierino@pmutex)) }
 
 
 
