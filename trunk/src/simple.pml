@@ -1,14 +1,18 @@
+#define NM 4
+
 #define Bevanda mtype
 mtype = { caffe, cappuccino, tea, nessuna };
 
 #define Edisplay mtype
-mtype = { e_credito, e_zucchero, e_prezzo, e_erogazione };
+mtype = { e_credito, e_zucchero, e_prezzo, e_erogazione, e_fine_erogazione };
 
 byte credito = 0;
 byte prezzo = 0;
+byte resto;
 Bevanda bevanda_erogata = nessuna;
 Bevanda scelta = nessuna;
 byte dcredito = 0;
+byte cmonete[NM];
 
 chan monete = [0] of { byte }
 chan bevanda = [0] of { Bevanda }
@@ -37,6 +41,7 @@ proctype Display()
 	byte dzucchero = 0;
 	byte dprezzo;
 	byte tmp;
+	byte dresto;
 	
 	do
 	:: eventi_display?e_credito,dcredito
@@ -46,10 +51,10 @@ proctype Display()
 		:: else
 		fi	
 	:: eventi_display?e_prezzo,dprezzo
-	:: eventi_display?e_erogazione, 1->
-		dcredito = dcredito - dprezzo;
+	:: eventi_display?e_erogazione, dresto->
+		dcredito = dcredito - dprezzo - dresto;
 		ldcredito:	skip;
-	:: eventi_display?e_erogazione, 0
+	:: eventi_display?e_fine_erogazione, 0
 	od
 }
 
@@ -77,7 +82,9 @@ proctype Gettoniera()
 {
 	byte m;
 	byte id = 1;
+	byte i;
 	
+
 /* diminuzione credito all'erogazione e alla richiesta di resto */
  G:	do
 	:: atomic { monete?m ->			
@@ -92,9 +99,22 @@ proctype Gettoniera()
 	  pmutex: id = 1 - id; 
 		/* assert(m == 5 || m == 10 || m == 20 || m == 50 || m == 100 || m == 200); */
 		if
-		:: ((credito + m) < 60) -> 
+		:: ((credito + m) <= 100 ) -> 
+			for (i : 0..NM-1) {
+				if 
+				:: (cmonete[i] > 255) -> goto G
+				:: else
+				fi
+			}
 			credito = credito + m;
-			eventi_display!e_credito,credito
+			eventi_display!e_credito,credito;
+			if
+			:: (m == 5) -> i = 3;
+			:: (m == 10) -> i = 2;
+			:: (m == 20) -> i = 1;
+			:: (m == 50) -> i = 0;
+			fi;
+			cmonete[i] = cmonete[i] + 1;
 		:: else 	/* rigetta la moneta */
 		fi;
 		controllo!true;
@@ -106,17 +126,46 @@ proctype Gettoniera()
 
 proctype Controllo()
 {
+	byte r;
+	byte i;
+	byte vmonete[NM];
+
+	vmonete[0] = 50;
+	vmonete[1] = 20;
+	vmonete[2] = 10;
+	vmonete[3] = 5;
+	
+
 	do
 	:: controllo?true -> 
 	     lctrl:	if 
 	  	:: (prezzo > 0 && credito >= prezzo) ->
+			r = credito - prezzo;
 			credito = credito - prezzo;
 	                preset:  prezzo = 0;
-			eventi_display!e_erogazione,1;
+
+			resto = 0;
+			for (i : 0..NM-1) {
+				if
+				:: ((r / vmonete[i]) <= cmonete[i] ) ->
+					resto = resto + (r / vmonete[i]) * vmonete[i];
+ 					r = r % vmonete[i];
+					cmonete[i] = cmonete[i] - (r / vmonete[i]);
+				:: else ->
+					resto = resto + (cmonete[i] * vmonete[i]);
+					r = r - (cmonete[i] * vmonete[i]);
+					cmonete[i] = 0;
+				fi
+			}
+		cresto:	credito = credito - resto;
+			
+			eventi_display!e_erogazione,resto;
+
+		     p5:	skip;
 			eroga!true
   	  	:: else -> list?_;
 	  	fi;
-	od
+	od;
 }
 
 proctype Tastierino()
@@ -163,7 +212,7 @@ proctype Erogatore()
 	do		
 	:: eroga?true ->
 		tmp = scelta;
-		eventi_display!e_erogazione, 0;
+		eventi_display!e_fine_erogazione, 0;
 	   	bicchiere!tmp;
 		assert(bevanda_erogata != nessuna);
 		scelta = nessuna;
@@ -193,6 +242,7 @@ ltl p1 { []<> (Controllo@lctrl) }
 ltl p2 { [] (len(list) < 4) }
 ltl p3 { []<> (dcredito == credito)}
 ltl p4 { [] (Display@ldcredito ->  (dcredito == credito)) }
+ltl p5 { [] (Controllo@cresto -> (resto <= credito))} 
 
 
 
