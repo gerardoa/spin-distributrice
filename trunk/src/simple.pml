@@ -6,8 +6,12 @@ mtype = { caffe, cappuccino, tea, nessuna };
 #define Edisplay mtype
 mtype = { e_credito, e_zucchero, e_prezzo, e_erogazione, e_fine_erogazione };
 
+#define Zucchero mtype
+mtype = { piu, meno };
+
 byte credito = 0;
 byte prezzo = 0;
+byte zucchero = 0;
 byte resto;
 Bevanda bevanda_erogata = nessuna;
 Bevanda scelta = nessuna;
@@ -16,8 +20,9 @@ byte cmonete[NM];
 
 chan monete = [0] of { byte }
 chan bevanda = [0] of { Bevanda }
+chan c_zucchero = [0] of { Zucchero }
 chan eroga = [0] of { bool }
-chan bicchiere = [0] of { Bevanda }
+chan bicchiere = [0] of { Bevanda, byte }
 chan controllo = [0] of { bool }
 chan eventi_display = [0] of { Edisplay, byte }
 	
@@ -37,44 +42,42 @@ init
 
 proctype Display()
 {
-	/* byte dcredito; */
+	/* byte dcredito; (dichiarata globale per la verifica delle proprietà) */
 	byte dzucchero = 0;
 	byte dprezzo;
-	byte tmp;
+	int tmp;
 	byte dresto;
 	
 	do
 	:: eventi_display?e_credito,dcredito
 	:: eventi_display?e_zucchero,tmp -> 
-		if
-		:: (dzucchero +tmp >= 0) && (dzucchero +tmp <= 5)  -> dzucchero = dzucchero + tmp
-		:: else
-		fi	
+		dzucchero = dzucchero + tmp
 	:: eventi_display?e_prezzo,dprezzo
 	:: eventi_display?e_erogazione, dresto->
 		dcredito = dcredito - dprezzo - dresto;
 		ldcredito:	skip;
-	:: eventi_display?e_fine_erogazione, 0
+	:: eventi_display?e_fine_erogazione, 0 ->
+		dzucchero = 0
 	od
 }
 
 proctype Utente()
 {
+	byte lvl_zucchero;
 
 	do
 	:: monete!5
 	:: monete!10
 	:: monete!20
 	:: monete!50
-	/*:: monete!100
-	:: monete!200*/
 	
 	:: bevanda!caffe
 	:: bevanda!cappuccino
 	:: bevanda!tea
+	:: c_zucchero!piu
+	:: c_zucchero!meno
 
-	:: bicchiere?bevanda_erogata 
-		
+	:: bicchiere?bevanda_erogata, lvl_zucchero
 	od
 }
 
@@ -83,9 +86,7 @@ proctype Gettoniera()
 	byte m;
 	byte id = 1;
 	byte i;
-	
 
-/* diminuzione credito all'erogazione e alla richiesta di resto */
  G:	do
 	:: atomic { monete?m ->			
 		list!id; } 
@@ -97,7 +98,7 @@ proctype Gettoniera()
 		fi;
 
 	  pmutex: id = 1 - id; 
-		/* assert(m == 5 || m == 10 || m == 20 || m == 50 || m == 100 || m == 200); */
+		assert(m == 5 || m == 10 || m == 20 || m == 50);
 		if
 		:: ((credito + m) <= 100 ) -> 
 			for (i : 0..NM-1) {
@@ -106,8 +107,10 @@ proctype Gettoniera()
 				:: else
 				fi
 			}
+			/* aggiornamento credito */
 			credito = credito + m;
 			eventi_display!e_credito,credito;
+			/* aggiornamento numero di monete presenti */
 			if
 			:: (m == 5) -> i = 3;
 			:: (m == 10) -> i = 2;
@@ -118,10 +121,7 @@ proctype Gettoniera()
 		:: else 	/* rigetta la moneta */
 		fi;
 		controllo!true;
-		
-	od;
-
- 
+	od; 
 }
 
 proctype Controllo()
@@ -172,8 +172,10 @@ proctype Tastierino()
 {
 	byte id = 3;
 	Bevanda b;
+	Zucchero z;
+	int zi;
 
-  T:	do
+  	do
 	:: atomic { bevanda?b -> list!id; }
 	    start:	 if
 		 :: (id == 3) -> 
@@ -202,6 +204,29 @@ proctype Tastierino()
 		fi;
 	lcontrollo:	controllo!true;
 	   end: 	skip;
+	:: atomic { c_zucchero?z -> list!id; }
+	    	 if
+		 :: (id == 3) -> 
+			list?<3>
+		 :: (id == 4) -> 
+			list?<4>
+		fi;
+	  	if
+		:: (id == 3) -> id = 4
+		:: (id == 4) -> id = 3
+		fi;
+
+		if 
+		:: (z == piu) -> zi = 1;
+		:: (z == meno) -> zi = -1;
+		fi;
+		if
+		:: (zucchero +zi >= 0) && (zucchero +zi <= 5)  -> 
+			zucchero = zucchero + zi;
+			eventi_display!e_zucchero,zi
+		:: else
+		fi;
+		list?_;
 	od;
 }
 
@@ -213,8 +238,9 @@ proctype Erogatore()
 	:: eroga?true ->
 		tmp = scelta;
 		eventi_display!e_fine_erogazione, 0;
-	   	bicchiere!tmp;
+	   	bicchiere!tmp, zucchero;
 		assert(bevanda_erogata != nessuna);
+		zucchero = 0;
 		scelta = nessuna;
 		bevanda_erogata = nessuna;		   		
 		list?_;	
@@ -243,6 +269,11 @@ ltl p2 { [] (len(list) < 4) }
 ltl p3 { []<> (dcredito == credito)}
 ltl p4 { [] (Display@ldcredito ->  (dcredito == credito)) }
 ltl p5 { [] (Controllo@cresto -> (resto <= credito))} 
+	ltl p6 { [] !(zucchero == 6) } 
+
+
+
+
 
 
 
