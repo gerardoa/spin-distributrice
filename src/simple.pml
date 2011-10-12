@@ -121,6 +121,7 @@ proctype Gettoniera()
 		:: else 	/* rigetta la moneta */
 		fi;
 		controllo!true;
+	fine:	skip;
 	od; 
 }
 
@@ -174,21 +175,13 @@ proctype Tastierino()
 	Bevanda b;
 	Zucchero z;
 	int zi;
+	bool bz;
 
   	do
 	:: atomic { bevanda?b -> list!id; }
-	    start:	 if
-		 :: (id == 3) -> 
-	check1:		list?<3>
-		 :: (id == 4) -> 
-	check2:		list?<4>
-
-		fi;
-	  pmutex:	if
-		:: (id == 3) -> id = 4
-		:: (id == 4) -> id = 3
-		fi;
-		if
+		bz = 0;
+	    	goto start;
+	    bev:	if
 		:: (b == caffe) ->
 			prezzo = 35;
 			scelta = caffe;
@@ -202,21 +195,12 @@ proctype Tastierino()
 			scelta = tea;
 			eventi_display!e_prezzo,40
 		fi;
-	lcontrollo:	controllo!true;
-	   end: 	skip;
+         lcontrollo:	controllo!true;
+	   fine: 	skip;
 	:: atomic { c_zucchero?z -> list!id; }
-	    	 if
-		 :: (id == 3) -> 
-			list?<3>
-		 :: (id == 4) -> 
-			list?<4>
-		fi;
-	  	if
-		:: (id == 3) -> id = 4
-		:: (id == 4) -> id = 3
-		fi;
-
-		if 
+		bz = 1;
+	    	goto start;
+	   zuc:	if 
 		:: (z == piu) -> zi = 1;
 		:: (z == meno) -> zi = -1;
 		fi;
@@ -228,6 +212,21 @@ proctype Tastierino()
 		fi;
 		list?_;
 	od;
+
+	start:	 if
+		 :: (id == 3) -> 
+	check1:		list?<3>
+		 :: (id == 4) -> 
+	check2:		list?<4>
+		fi;
+	pmutex:	if
+		:: (id == 3) -> id = 4
+		:: (id == 4) -> id = 3
+		fi;
+		if 
+		:: (bz == 0) -> goto bev;
+		:: (bz == 1) -> goto zuc;
+		fi;
 }
 
 proctype Erogatore()
@@ -247,29 +246,42 @@ proctype Erogatore()
 	od
 }
 
-
+/* garantire mutua esclusione tra la gettoniera e il tastierino  */
 ltl pmutex { [](!(Gettoniera@pmutex && Tastierino@pmutex)) }
+/* controprova della precedente, in questo caso bisogna ottenere un errore */
 ltl pmutexe { <>((Gettoniera@pmutex && Tastierino@pmutex)) }
+
+/* assicurano che qualora le condizioni necessarie per erogare una bevanda siano soddisfatte, 
+allora la bevanda selezionata sara' la prossima ad essere erogata */
 ltl c1 { []((credito >= 35 && scelta == caffe ) ->  (bevanda_erogata == nessuna U bevanda_erogata == caffe))}
 ltl cp1 { []((credito >= 50 && scelta == cappuccino ) ->  (bevanda_erogata == nessuna U bevanda_erogata == cappuccino))}
 ltl t1 { []((credito >= 40 && scelta == tea ) ->  (bevanda_erogata == nessuna U bevanda_erogata == tea))}
+/* controprova di c1, in questo caso ci si aspetta un errore */
 ltl c1e { []((credito < 35 && scelta == caffe ) ->  (bevanda_erogata == nessuna U bevanda_erogata == caffe))}
 
-/* ltl c2 { []((credito >= 35 && Utente@c2 ) ->  (bevanda_erogata == nessuna U bevanda_erogata == caffe))} */
+/* prima o poi la gettoniera riuscirà ad ottenere il mutex ed a espletare tutte le sue operazioni */
+ltl g1 { [] (Gettoniera@start -> <> Gettoniera@fine) } 
 
-ltl test1 { [] (Tastierino@start -> <> Tastierino@end) } 
-
+/* il credito che verra' scalato per il caffe e' 35 */
 ltl c3 { []( (credito == 100 && Tastierino@lcontrollo && scelta == caffe ) -> (credito == 100 U credito == 65) ) }
-
+/* se il credito scalato e' 35, allora la bevanda erogata sara' caffe */
 ltl c4 { []((Controllo@preset && prezzo == 35) -> (bevanda_erogata == nessuna U bevanda_erogata == caffe)) }
 ltl cp4 { []((Controllo@preset && prezzo == 50) -> (bevanda_erogata == nessuna U bevanda_erogata == cappuccino)) }	
+
+/* se gettoniera e tastierino sono entrambi in attesa del mutext uno dei due lo ricevera' nello stato successivo */
 ltl next { [](( (Gettoniera@check1 +  Gettoniera@check2 + Tastierino@check1 + Tastierino@check2 == 2) && len(list) == 2) -> X(Gettoniera@pmutex || Tastierino@pmutex)) }
+/* proprieta' di progresso: la macchina effettuera' il controllo infinitamente spesso */
 ltl p1 { []<> (Controllo@lctrl) }
+/* safety: la lunghezza della lista sarà sempre minore di 4 */
 ltl p2 { [] (len(list) < 4) }
+/* è sempre vero che prima o poi il credito mostrato dal display sara' uguale al credito interno */
 ltl p3 { []<> (dcredito == credito)}
+/* aggiornando il credito del display con il prezzo locale e il resto comunicato dal controllo si ottine il credito reale */
 ltl p4 { [] (Display@ldcredito ->  (dcredito == credito)) }
+/* il resto restituito è sempre minore o ugale del credito rimanente*/
 ltl p5 { [] (Controllo@cresto -> (resto <= credito))} 
-	ltl p6 { [] !(zucchero == 6) } 
+/* reachability: lo zucchero in qualche comportamento raggiungerà il livello 5 (questa proprietà deve risultare in un errore) */
+ltl p6 { [] !(zucchero == 5) } 
 
 
 
