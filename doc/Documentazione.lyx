@@ -1,0 +1,984 @@
+#LyX 1.6.9 created this file. For more info see http://www.lyx.org/
+\lyxformat 345
+\begin_document
+\begin_header
+\textclass article
+\use_default_options true
+\language italian
+\inputencoding auto
+\font_roman default
+\font_sans default
+\font_typewriter default
+\font_default_family default
+\font_sc false
+\font_osf false
+\font_sf_scale 100
+\font_tt_scale 100
+
+\graphics default
+\paperfontsize default
+\spacing single
+\use_hyperref false
+\papersize default
+\use_geometry true
+\use_amsmath 1
+\use_esint 1
+\cite_engine basic
+\use_bibtopic false
+\paperorientation portrait
+\leftmargin 3cm
+\rightmargin 3cm
+\secnumdepth 3
+\tocdepth 3
+\paragraph_separation indent
+\defskip medskip
+\quotes_language english
+\papercolumns 1
+\papersides 1
+\paperpagestyle default
+\tracking_changes false
+\output_changes false
+\author "" 
+\author "" 
+\end_header
+
+\begin_body
+
+\begin_layout Standard
+
+\lang english
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+begin{center}
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+
+\lang english
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+{
+\backslash
+large Università degli Studi di Napoli Federico II}
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+
+\lang english
+\begin_inset VSpace bigskip
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+
+\lang english
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+{
+\backslash
+large  Facoltà di Scienze MM.
+ FF.
+ NN.}
+\end_layout
+
+\end_inset
+
+
+\begin_inset VSpace bigskip
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+
+\lang english
+Corso di Laurea in Informatica
+\end_layout
+
+\begin_layout Standard
+
+\lang english
+\begin_inset VSpace 1.5cm
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Graphics
+	filename Napoli_university_seal.gif
+	scale 80
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+
+\lang english
+\begin_inset VSpace 1.5cm
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+
+\lang english
+Tecniche di Specifica 
+\begin_inset VSpace 1cm
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+
+\lang english
+A.A.
+ 2010/2011
+\begin_inset VSpace 2cm
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+
+\lang english
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+{
+\backslash
+large Specifica di un distributore di bevande calde in SPIN}
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+
+\lang english
+\begin_inset VSpace 2cm
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+
+\lang english
+Adelizzi Gerardo N97/76
+\end_layout
+
+\begin_layout Standard
+Petrova Iliana N97/91
+\end_layout
+
+\begin_layout Standard
+
+\lang english
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+end{center}
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Newpage newpage
+\end_inset
+
+ 
+\begin_inset CommandInset toc
+LatexCommand tableofcontents
+
+\end_inset
+
+
+\begin_inset Newpage newpage
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section
+Introduzione
+\end_layout
+
+\begin_layout Standard
+Di seguito è riportata una breve descrizione delle specifiche di un distributore
+ di bevande calde e la nostra proposta di un modello del comportamento del
+ sistema tramite il model checker SPIN.
+\end_layout
+
+\begin_layout Standard
+Il sistema modella un dispositivo automatico finalizzato alla produzione
+ di bevande.
+\end_layout
+
+\begin_layout Standard
+Il sistema accetta una serie di monete, permette la selezione della bevanda
+ desiderata attraverso un apposito tastierino, dopodiché procede alla preparazio
+ne della bevanda scelta e alla restituzione del resto.
+ L’intero processo viene descritto e visualizzato attraverso un display
+ LCD.
+\end_layout
+
+\begin_layout Standard
+Nel dettaglio le bevande disponibili e i relativi prezzi sono: Caffè 0,35,
+ Cappuccino 0,50 e Tea 0,40.
+ Il sistema verifica il valore delle monete inserite con il prezzo del prodotto
+ scelto e inizia la preparazione se l'ultima bevanda erogata è stata prelevata.
+\end_layout
+
+\begin_layout Standard
+Un display grafico LCD mostra le principali informazioni di interesse per
+ l'utente, in particolare: 
+\end_layout
+
+\begin_layout Itemize
+il valore del credito inserito; 
+\end_layout
+
+\begin_layout Itemize
+la quantità di zucchero da utilizzare per la preparazione della bevanda;
+ 
+\end_layout
+
+\begin_layout Itemize
+il prezzo dell'ultima bevanda selezionata.
+\end_layout
+
+\begin_layout Standard
+Il tastierino numerico è composto da un insieme di tasti, ciascuno per ogni
+ bevanda, dai tasti “+” e “-” che aumenta o diminuiscono la quantità di
+ zucchero nell’intervallo chiuso tra 0 e 5.
+ Chiaramente quando il valore assunto è uno degli estremi la relativa pressione
+ dei tasti “-” e “+” non provoca nessun cambiamento.
+\end_layout
+
+\begin_layout Standard
+La pressione dei tasti può avvenire in modo casuale ed in qualsiasi ordine,
+ ma ricordando che l’attivazione del processo di preparazione avviene esclusivam
+ente al raggiungimento del credito necessario per la bevanda prescelta.
+ Per bevanda prescelta si intende l'ultima bevanda scelta dall'utente, che
+ può cambiare la sua scelta semplicemente premendo il tasto relativo ad
+ un altra bevanda.
+ Se l'utente effettua la scelta e il credito presente è maggiore o uguale
+ al prezzo della bevanda, l'erogazione è immediata.
+\end_layout
+
+\begin_layout Standard
+Il sistema è formato da sei componenti parallele: 
+\end_layout
+
+\begin_layout Itemize
+Utente 
+\end_layout
+
+\begin_layout Itemize
+Display 
+\end_layout
+
+\begin_layout Itemize
+Gettoniera 
+\end_layout
+
+\begin_layout Itemize
+Tastierino 
+\end_layout
+
+\begin_layout Itemize
+Controllo 
+\end_layout
+
+\begin_layout Itemize
+Erogatore
+\end_layout
+
+\begin_layout Section
+Componenti del sistema
+\end_layout
+
+\begin_layout Subsection
+Utente
+\end_layout
+
+\begin_layout Standard
+\align center
+\begin_inset Graphics
+	filename Utente.png
+	scale 65
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Il processo 
+\emph on
+Utente
+\emph default
+ simula l'utilizzo della macchina da parte di una o più persone in successione.
+ Il canale 
+\emph on
+monete
+\emph default
+ simula l'inserimento di una moneta di taglio 5, 10, 20 o 50 centesimi.
+ E' un canale sincrono e permette la comunicazione tra 
+\emph on
+Utente
+\emph default
+ e 
+\emph on
+Gettoniera
+\emph default
+, accettando l'invio di un messaggio di tipo byte che rappresenta il valore
+ della moneta inserita.
+ Il canale 
+\emph on
+bevanda
+\emph default
+ simula la scelta della bevanda.
+ E' un canale sincrono e consente la comunicazione tra 
+\emph on
+Utente
+\emph default
+ e 
+\emph on
+Tastierino
+\emph default
+, accettando l'invio di un messaggio di tipo 
+\emph on
+Bevanda
+\emph default
+ che rappresenta la bevanda scelta dall'utente.
+ Il canale 
+\emph on
+bicchiere
+\emph default
+ simula il prelievo della bevanda.
+ E' un canale sincrono e permette all'
+\emph on
+Erogatore
+\emph default
+ di comunicare all'
+\emph on
+Utente
+\emph default
+ che la bevanda è pronta per essere prelevata.
+ Accetta l'invio di un messaggio di tipo 
+\emph on
+Bevanda
+\emph default
+ che rappresenta la bevanda preparata dalla macchina.
+\end_layout
+
+\begin_layout Standard
+I canali 
+\emph on
+monete
+\emph default
+ e 
+\emph on
+bevanda
+\emph default
+ sono sincroni, per semplificare l'elaborazione dei messaggi nell'ordine
+ in cui sono inviati dall'
+\emph on
+Utente
+\emph default
+.
+ Infatti essendo i canali distinti, se fossero stati asincroni, non sarebbe
+ stato facile ricostruire l'ordine degli inserimenti di monete e delle scelte
+ effettuate.
+ Il canale 
+\emph on
+bicchiere
+\emph default
+ è sincrono poiché in questo modo ci assicuriamo che non sia erogata una
+ bevanda prima che la precedente sia stata prelevata.
+\end_layout
+
+\begin_layout Subsection
+Gettoniera
+\end_layout
+
+\begin_layout Standard
+\align center
+\begin_inset Graphics
+	filename Gettoniera.png
+	scale 65
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Il processo 
+\emph on
+Gettoniera
+\emph default
+ simula l'apparato della macchina che si occupa di ricevere le monete.
+ Il suo compito consiste nell'aumentare il credito in base al valore delle
+ monete ricevute e di tener traccia del numero di monete presenti per ogni
+ taglio, al fine del rilascio di un eventuale resto, inoltre comunica al
+ 
+\emph on
+Display
+\emph default
+ il valore del nuovo credito.
+ Prima di aggiornare il credito si verifica che quest'ultimo non superi
+ un limite massimo prefissato, con lo scopo di evitare 
+\emph on
+overflow
+\emph default
+ e limitare l'esplosione del numero di stati raggiungibili, ragione per
+ cui il limite è 100 e non 255.
+ Il ragionamento è analogo per l'incremento del numero di monete.
+ Al termine delle sue operazioni la 
+\emph on
+Gettoniera
+\emph default
+ invia un segnale al 
+\emph on
+Controllo
+\emph default
+ sull'omonimo canale, affinché effettui le necessarie verifiche per l'erogazione
+ della bevanda.
+ 
+\end_layout
+
+\begin_layout Subsection
+Tastierino
+\end_layout
+
+\begin_layout Standard
+\align center
+\begin_inset Graphics
+	filename Tastierino.jpg
+	scale 65
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Il processo 
+\emph on
+Tastierino
+\emph default
+ simula un tastierino appunto, per la selezione della bevanda e del livello
+ di zucchero.
+ Il processo resta in ascolto delle richieste dell'Utente sui canali 
+\emph on
+bevanda
+\emph default
+ e 
+\emph on
+c_zucchero
+\emph default
+.
+ Quando l'
+\emph on
+Utente
+\emph default
+ seleziona una bevanda, il 
+\emph on
+Tastierino
+\emph default
+ ne associa il relativo prezzo settando la variabile globale 
+\emph on
+prezzo
+\emph default
+ e la variabile globale 
+\emph on
+scelta
+\emph default
+ che indica la bevanda correntemente selezionata e per cui si provvederà
+ ad una eventuale erogazione.
+ Quando l'
+\emph on
+Utente
+\emph default
+ incrementa o decrementa il livello di zucchero, il 
+\emph on
+Tastierino
+\emph default
+ aumenta o decrementa la variabile globale 
+\emph on
+zucchero
+\emph default
+ se l'aggiornamento rientra nei livelli consentiti.
+ In entrambi i casi il 
+\emph on
+Tastierino
+\emph default
+ comunica al 
+\emph on
+Display
+\emph default
+ gli aggiornamenti di prezzo e livello di zucchero inviando messaggi sul
+ canale 
+\emph on
+eventi_display
+\emph default
+.
+ 
+\end_layout
+
+\begin_layout Subsection
+Display
+\end_layout
+
+\begin_layout Standard
+\align center
+\begin_inset Graphics
+	filename Display.png
+	scale 65
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Il processo 
+\emph on
+Display
+\emph default
+ rappresenta il dispositivo incaricato di visualizzare le informazioni all'utent
+e.
+ Rispetto agli altri processi, modellare qualcosa di passivo come la visualizzaz
+ione è stato meno immediato.
+ Alla fine si è optato per l'introduzione di variabili utilizzate solamente
+ dal processo 
+\emph on
+Display
+\emph default
+ che simulano dei 
+\emph on
+buffer
+\emph default
+ il cui contenuto verrà visualizzato all'utente.
+ Il 
+\emph on
+Display
+\emph default
+ resta in ascolto sul canale 
+\emph on
+eventi_display
+\emph default
+ dove gli altri componenti del sistema lo aggiornano sullo stato corrente
+ del sistema che interessa al 
+\emph on
+Display
+\emph default
+, in particolare il credito corrente, il prezzo della bevanda, il livello
+ di zucchero e lo stato dell'erogazione.
+ Per rendere meno banale il processo e permettere la verifica di alcune
+ proprietà, l'aggiornamento di alcuni buffer prevede dei calcoli in base
+ alle informazioni ricevute anziché rispecchiare ciecamente il contenuto
+ delle variabili globali.
+ 
+\end_layout
+
+\begin_layout Subsection
+Controllo
+\end_layout
+
+\begin_layout Standard
+\align center
+\begin_inset Graphics
+	filename Controllo.png
+	scale 65
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Il processo 
+\emph on
+Controllo
+\emph default
+ è un componente interno alla macchina e non visibile all'utente.
+ Esso incorpora la maggior parte della logica di funzionamento.
+ I suoi compiti consistono nel verificare che il credito corrente sia sufficient
+e per l'erogazione della bevanda selezionata, calcolare un eventuale resto,
+ comunicare all'
+\emph on
+Erogatore
+\emph default
+ di erogare e informare il 
+\emph on
+Display
+\emph default
+ sull'avvio dell'erogazione e del resto calcolato.
+\end_layout
+
+\begin_layout Subsection
+Erogatore
+\end_layout
+
+\begin_layout Standard
+\align center
+\begin_inset Graphics
+	filename Erogatore.png
+	scale 65
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Il processo 
+\emph on
+Erogatore
+\emph default
+ simula la preparazione e consegna della bevanda all'utente.
+ La consegna è simulata tramite il canale sincrono 
+\emph on
+bicchiere
+\emph default
+.
+ Inoltre provvede a resettare alcune variabili globali.
+ 
+\end_layout
+
+\begin_layout Subsection
+Mutua esclusione e sequenzializzazione
+\end_layout
+
+\begin_layout Standard
+I processi 
+\emph on
+Gettoniera
+\emph default
+, 
+\emph on
+Tastierino
+\emph default
+, 
+\emph on
+Controllo
+\emph default
+ ed 
+\emph on
+Erogatore
+\emph default
+, per poter operare correttamente devono poter non solo comunicare ma anche
+ sincronizzarsi.
+ L'esempio forse più eclatante è che il 
+\emph on
+Tastierino
+\emph default
+ non può cambiare la scelta corrente mentre il Controllo verifica il prezzo,
+ il rischio è di erogare una bevanda diversa dal prezzo pagato.
+ Inoltre l'utente si aspetta che le sue azioni vengano eseguite in sequenza
+ e non in un altro ordine.
+ Tutto ciò ha dato vita ad un meccanismo che garantisse che l'ordine in
+ cui sono processate le richieste coincide con quello di ricezione delle
+ stesse, e al tempo stesso assicuri mutua esclusione tra i processi per
+ evitare situazioni come quella precedentemente descritta.
+\end_layout
+
+\begin_layout Standard
+Il meccanismo prevede l'introduzione di una coda 
+\emph on
+list
+\emph default
+, dichiarata come chan 
+\begin_inset Formula $list=\left[4\right]of\left\{ byte\right\} $
+\end_inset
+
+.
+ All'arrivo di una richiesta da parte dell'utente (inserimento di moneta,
+ selezione di una bevanda o cambiamento del livello di zucchero), il processo
+ interessato (
+\emph on
+Gettoniera
+\emph default
+ o 
+\emph on
+Tastierino
+\emph default
+) inserisce un proprio id in coda.
+ Ad esempio in 
+\emph on
+Gettoniera
+\emph default
+ il codice è 
+\begin_inset Formula $atomic\left\{ monete?m\rightarrow list!id;\right\} $
+\end_inset
+
+.
+ Successivamente verifica che l'id sia in testa alla coda per poter procedere
+ con l'esecuzione.
+ Il codice (sempre della 
+\emph on
+Gettoniera
+\emph default
+) interessato è:
+\end_layout
+
+\begin_layout Standard
+\align center
+\begin_inset Graphics
+	filename List.png
+	scale 65
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+L'
+\emph on
+id
+\emph default
+ di ogni processo alterna tra due possibili valori, per poter distinguere
+ due differenti richieste servite dal medesimo processo che possono essere
+ al massimo due.
+ In questo modo si evita che la seconda richiesta superi il controllo utilizzand
+o l'
+\emph on
+id
+\emph default
+ della prima richiesta che nel frattempo non è ancora stata completamente
+ processata e quindi l'
+\emph on
+id
+\emph default
+ è ancora in testa alla coda.
+ L'
+\emph on
+id
+\emph default
+ è rimosso dalla testa della coda non appena la richiesta è stata completata,
+ che nel caso di inserimento di moneta o scelta di una bevanda avviene con
+ l'erogazione o dopo che è stato verificato che il credito è insufficiente,
+ mentre per il cambiamento del livello di zucchero la richiesta è completata
+ non appena il livello è stato aggiornato.
+\end_layout
+
+\begin_layout Section
+Verifica delle proprietà
+\end_layout
+
+\begin_layout Enumerate
+Garantisce mutua esclusione tra la gettoniera e il tastierino 
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+ltl pmutex { [](!(Gettoniera@pmutex && Tastierino@pmutex)) } 
+\end_layout
+
+\end_deeper
+\begin_layout Enumerate
+Controprova della precedente, in questo caso bisogna ottenere un errore
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+ltl pmutexe { <>((Gettoniera@pmutex && Tastierino@pmutex)) }
+\end_layout
+
+\end_deeper
+\begin_layout Enumerate
+Assicurano che qualora le condizioni necessarie per erogare una bevanda
+ siano soddisfatte, allora la bevanda selezionata sara' la prossima ad essere
+ erogata
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+ltl c1 { []((credito >= 35 && scelta == caffe ) -> (bevanda_erogata == nessuna
+ U bevanda_erogata == caffe))}
+\end_layout
+
+\begin_layout Itemize
+ltl cp1 { []((credito >= 50 && scelta == cappuccino ) -> (bevanda_erogata
+ == nessuna U bevanda_erogata == cappuccino))} 
+\end_layout
+
+\begin_layout Itemize
+ltl t1 { []((credito >= 40 && scelta == tea ) -> (bevanda_erogata == nessuna
+ U bevanda_erogata == tea))} 
+\end_layout
+
+\end_deeper
+\begin_layout Enumerate
+Controprova di c1, in questo caso ci si aspetta un errore
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+ltl c1e { []((credito < 35 && scelta == caffe ) -> (bevanda_erogata == nessuna
+ U bevanda_erogata == caffe))}
+\end_layout
+
+\end_deeper
+\begin_layout Enumerate
+Prima o poi la gettoniera riuscirà ad ottenere il mutex ed a espletare tutte
+ le sue operazioni 
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+ltl g1 { [] (Gettoniera@start -> <> Gettoniera@fine) } 
+\end_layout
+
+\end_deeper
+\begin_layout Enumerate
+Il credito che verra' scalato per il caffe e' 35 
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+ltl c3 { []( (credito == 100 && Tastierino@lcontrollo && scelta == caffe
+ ) -> (credito == 100 U credito == 65) ) } 
+\end_layout
+
+\end_deeper
+\begin_layout Enumerate
+Se il credito scalato e' 35, allora la bevanda erogata sara' caffe 
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+ltl c4 { []((Controllo@preset && prezzo == 35) -> (bevanda_erogata == nessuna
+ U bevanda_erogata == caffe)) }
+\end_layout
+
+\begin_layout Itemize
+ltl cp4 { []((Controllo@preset && prezzo == 50) -> (bevanda_erogata == nessuna
+ U bevanda_erogata == cappuccino)) } 
+\end_layout
+
+\end_deeper
+\begin_layout Enumerate
+Se gettoniera e tastierino sono entrambi in attesa del mutext uno dei due
+ lo ricevera' nello stato successivo 
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+ltl next { [](( (Gettoniera@check1 + Gettoniera@check2 + Tastierino@check1
+ + Tastierino@check2 == 2) && len(list) == 2) -> X(Gettoniera@pmutex ||
+ Tastierino@pmutex)) } 
+\end_layout
+
+\end_deeper
+\begin_layout Enumerate
+Proprieta' di progresso: la macchina effettuera' il controllo infinitamente
+ spesso 
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+ltl p1 { []<> (Controllo@lctrl) } 
+\end_layout
+
+\end_deeper
+\begin_layout Enumerate
+Safety: la lunghezza della lista sarà sempre minore di 4 
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+ltl p2 { [] (len(list) < 4) } 
+\end_layout
+
+\end_deeper
+\begin_layout Enumerate
+E' sempre vero che prima o poi il credito mostrato dal display sarà uguale
+ al credito interno 
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+ltl p3 { []<> (dcredito == credito)} 
+\end_layout
+
+\end_deeper
+\begin_layout Enumerate
+Aggiornando il credito del display con il prezzo locale e il resto comunicato
+ dal controllo si ottine il credito reale 
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+ltl p4 { [] (Display@ldcredito -> (dcredito == credito)) } 
+\end_layout
+
+\end_deeper
+\begin_layout Enumerate
+Il resto restituito è sempre minore o ugale del credito rimanente
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+ltl p5 { [] (Controllo@cresto -> (resto <= credito))} 
+\end_layout
+
+\end_deeper
+\begin_layout Enumerate
+Reachability: lo zucchero in qualche comportamento raggiungerà il livello
+ 5 (questa proprietà deve risultare in un errore) 
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+ltl p6 { [] !(zucchero == 5) } 
+\end_layout
+
+\end_deeper
+\end_body
+\end_document
