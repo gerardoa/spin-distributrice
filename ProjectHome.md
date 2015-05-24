@@ -1,0 +1,1 @@
+Automatic beverage dispenser system modelled using the SPIN model checker.
